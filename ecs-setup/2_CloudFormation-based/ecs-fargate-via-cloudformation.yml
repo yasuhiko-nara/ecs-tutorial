@@ -22,3 +22,8 @@ Outputs:
     Value: !Ref 'ECSCluster'
     Export:
       Name: !Sub ${EnvironmentName}:ClusterName
+  ContainerSecurityGroup:
+    Description: The container sg of the ECS cluster
+    Value: !Ref 'ContainerSecurityGroup'
+    Export:
+      Name: !Sub ${EnvironmentName}:ContainerSecurityGroup
