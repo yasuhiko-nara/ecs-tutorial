@@ -18,9 +18,9 @@ echo "subnet2: $subnet_2"
 
 ### via AWS mgm console
 
-* open AWS mgm console
-* go to service "_CloudFormation_"
-* check tab "_Outputs_" of stack "_ecs-core-infrastructure_" and get the IDs for VPC and both subnets
+- open AWS mgm console
+- go to service "_CloudFormation_"
+- check tab "_Outputs_" of stack "_ecs-core-infrastructure_" and get the IDs for VPC and both subnets
 
 ## create ecs cluster with launch-type FARGATE
 
