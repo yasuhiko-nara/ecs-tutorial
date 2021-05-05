@@ -4,8 +4,8 @@ Parameters:
   EnvironmentName:
     Type: String
     Default: ecs-course
-    Description: "A name that will be used for namespacing our cluster resources."
-Resources:    
+    Description: 'A name that will be used for namespacing our cluster resources.'
+Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
@@ -14,11 +14,14 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the ECS hosts that run containers
-      VpcId: 
+      VpcId:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
 Outputs:
   ClusterName:
     Description: The name of the ECS cluster
     Value: !Ref 'ECSCluster'
-    
-  
+
+  VpcId:
+    Description: The vpc id of the ECS cluster
+    Value:
+      Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
