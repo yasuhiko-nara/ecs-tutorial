@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: External, public facing load balancer, for forwarding public traffic to containers
 Parameters:
+  DomainName:
+    Type: String
+    Default: wanchanmask.work
   EnvironmentName:
     Type: String
     Default: ecs-course
@@ -12,6 +15,7 @@ Resources:
       DomainValidationOptions:
         - DomainName: !Sub 'api.${DomainName}'
           ValidationDomain: !Sub 'api.${DomainName}'
+      ValidationMethod: DNS
   PublicLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
