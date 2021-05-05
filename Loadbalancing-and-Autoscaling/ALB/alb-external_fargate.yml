@@ -42,7 +42,16 @@ Resources:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
       SecurityGroups: [!Ref 'PublicLoadBalancerSG']
-
+  ApiDomain:
+    Type: AWS::Route53::RecordSet
+    DependsOn: LoadBalancer
+    Properties:
+      HostedZoneName: !Sub '${DomainName}.'
+      Name: !Sub 'api.${DomainName}'
+      Type: CNAME
+      TTL: 60
+      ResourceRecords:
+        - !GetAtt PublicLoadBalancer.DNSName
   TargetGroupFargateService:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
