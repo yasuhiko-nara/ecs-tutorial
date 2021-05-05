@@ -20,8 +20,5 @@ Outputs:
   ClusterName:
     Description: The name of the ECS cluster
     Value: !Ref 'ECSCluster'
-
-  VpcId:
-    Description: The vpc id of the ECS cluster
-    Value:
-      Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+    Export:
+      Name: !Sub ${EnvironmentName}:ClusterName
