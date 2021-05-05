@@ -11,7 +11,7 @@ Parameters:
     Description: A name for the service
   ImageUrl:
     Type: String
-    Default: nginx
+    Default: nginx:1.17.7
     Description:
       The url of a docker image that contains the application process that
       will handle the traffic for this service
@@ -75,7 +75,7 @@ Resources:
       ExecutionRoleArn:
         Fn::ImportValue: !Sub ${EnvironmentName}:ECSTaskExecutionRole
       TaskRoleArn:
-        Fn::If:
+        Fn::If: #三項演算子。１行目がtrueなら２行目が参照され、falseなら３行目が参照される
           - 'HasCustomRole'
           - !Ref 'Role'
           - !Ref 'AWS::NoValue'
