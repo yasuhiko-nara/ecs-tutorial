@@ -42,7 +42,8 @@ Parameters:
   Role:
     Type: String
     Default:
-      Fn::ImportValue: !Sub ${EnvironmentName}:ECSTaskExecutionRole
+      ''
+      # Fn::ImportValue: !Sub ${EnvironmentName}:ECSTaskExecutionRole
     Description:
       (Optional) An IAM role to give the service's containers if the code within needs to
       access other AWS resources like S3 buckets, DynamoDB tables, etc
@@ -108,8 +109,8 @@ Resources:
           SecurityGroups:
             - Fn::ImportValue: !Sub ${EnvironmentName}:ContainerSecurityGroup
           Subnets:
-            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
-            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
       TaskDefinition: !Ref 'TaskDefinition'
       LoadBalancers:
         - ContainerName: !Ref 'ServiceName'
@@ -117,7 +118,7 @@ Resources:
           TargetGroupArn: !Ref 'TargetGroup'
   ApiDomain:
     Type: AWS::Route53::RecordSet
-    DependsOn: LoadBalancer
+    DependsOn: PublicLoadBalancer
     Properties:
       HostedZoneName: !Sub '${DomainName}.'
       Name: !Sub 'api.${DomainName}'
