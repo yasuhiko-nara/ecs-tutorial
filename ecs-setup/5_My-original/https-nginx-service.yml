@@ -2,8 +2,17 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: External, public facing load balancer, for forwarding public traffic to containers
 Parameters:
   DomainName:
+    Description: FQDN of the HostZone
     Type: String
-    Default: wanchanmask.work
+    Default: 'wanchanmask.work'
+  SubDomain:
+    Description: FQDN of the certificate
+    Type: String
+    Default: 'test.wanchanmask.work'
+  HostZoneId:
+    Description: FQDN of the hosted zone
+    Type: String
+    Default: 'Z05763132QSIVT5FXD1JH'
   EnvironmentName:
     Type: String
     Default: ecs-course
@@ -120,8 +129,8 @@ Resources:
     Type: AWS::Route53::RecordSet
     DependsOn: PublicLoadBalancer
     Properties:
-      HostedZoneName: !Sub '${DomainName}.'
-      Name: !Sub 'api.${DomainName}'
+      HostedZoneId: !Sub '${HostZoneId}'
+      Name: !Sub '${SubDomain}'
       Type: CNAME
       TTL: 60
       ResourceRecords:
@@ -129,10 +138,10 @@ Resources:
   ACMCertificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: !Sub 'api.${DomainName}'
+      DomainName: !Sub '${SubDomain}'
       DomainValidationOptions:
-        - DomainName: !Sub 'api.${DomainName}'
-          ValidationDomain: !Sub 'api.${DomainName}'
+        - DomainName: !Sub '${SubDomain}'
+          HostedZoneId: !Sub '${HostZoneId}'
       ValidationMethod: DNS
   PublicLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
