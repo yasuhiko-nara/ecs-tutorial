@@ -18,7 +18,7 @@ Parameters:
     Default: ecs-course
   ServiceName:
     Type: String
-    Default: nginx
+    Default: nginx-service
     Description: A name for the service
   ImageUrl:
     Type: String
@@ -50,9 +50,7 @@ Parameters:
     Description: How many copies of the service task to run
   Role:
     Type: String
-    Default:
-      ''
-      # Fn::ImportValue: !Sub ${EnvironmentName}:ECSTaskExecutionRole
+    Default: ''
     Description:
       (Optional) An IAM role to give the service's containers if the code within needs to
       access other AWS resources like S3 buckets, DynamoDB tables, etc
@@ -219,6 +217,7 @@ Resources:
       Priority: !Ref 'Priority'
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: PublicLoadBalancer
     Properties:
       HealthCheckIntervalSeconds: 6
       HealthCheckPath: /
