@@ -100,7 +100,7 @@ Resources:
   # as monitor the number of running tasks and replace any that have crashed
   Service:
     Type: AWS::ECS::Service
-    DependsOn: ListenerRule
+    DependsOn: HTTPSLoadBalancerListener
     Properties:
       ServiceName: !Ref 'ServiceName'
       Cluster:
@@ -184,7 +184,7 @@ Resources:
       LoadBalancerArn: !Ref 'PublicLoadBalancer'
       Port: 80
       Protocol: HTTP
-  HTTPSLoadBalancerListener: # / => /fargateに転送、およびSSL設定
+  HTTPSLoadBalancerListener: # SSL設定してTargetGroupに転送
     Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn: PublicLoadBalancer
     Properties:
@@ -192,30 +192,12 @@ Resources:
       Port: 443
       Protocol: HTTPS
       DefaultActions:
-        - Type: 'redirect'
-          RedirectConfig:
-            Protocol: '#{protocol}'
-            Port: '#{port}'
-            Host: '#{host}'
-            Path: '/fargate/'
-            StatusCode: 'HTTP_301'
+        - Type: 'forward'
+          TargetGroupArn: !Ref 'TargetGroup'
       SslPolicy: 'ELBSecurityPolicy-2016-08'
       Certificates:
         - CertificateArn: !Ref 'ACMCertificate'
-  ListenerRule: # /fargateに来たらTargetGroupを参照させる
-    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
-    Properties:
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref 'TargetGroup'
-      Conditions:
-        - Field: path-pattern
-          PathPatternConfig:
-            Values:
-              - /fargate/*
-      ListenerArn: !Ref 'HTTPSLoadBalancerListener'
-      Priority: !Ref 'Priority'
-  TargetGroup:
+  TargetGroup: # Serviceを参照させる
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DependsOn: PublicLoadBalancer
     Properties:
