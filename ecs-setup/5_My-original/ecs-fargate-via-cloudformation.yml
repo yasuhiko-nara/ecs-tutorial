@@ -16,6 +16,15 @@ Resources:
       GroupDescription: Access to the ECS hosts that run containers
       VpcId:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
 Outputs:
   ClusterName:
     Description: The name of the ECS cluster
