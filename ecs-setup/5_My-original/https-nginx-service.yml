@@ -46,7 +46,7 @@ Parameters:
       assigned to different paths on the load balancer.
   DesiredCount:
     Type: Number
-    Default: 2
+    Default: 1
     Description: How many copies of the service task to run
   Role:
     Type: String
@@ -104,7 +104,7 @@ Resources:
     Properties:
       ServiceName: !Ref 'ServiceName'
       Cluster:
-        Fn::ImportValue: !Sub ${EnvironmentName}:ClusterName
+        Fn::ImportValue: !Sub ${EnvironmentName}:ECSCluster
       LaunchType: FARGATE
       DeploymentConfiguration:
         MaximumPercent: 200
@@ -219,3 +219,8 @@ Outputs:
     Value: !Sub https://${PublicLoadBalancer.DNSName}
     Export:
       Name: !Sub ${EnvironmentName}:ExternalUrl
+  ServiceName:
+    Description: The name of ecs service
+    Value: !Ref 'ServiceName'
+    Export:
+      Name: !Sub ${EnvironmentName}:ServiceName

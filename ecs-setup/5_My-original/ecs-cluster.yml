@@ -5,11 +5,15 @@ Parameters:
     Type: String
     Default: ecs-course
     Description: 'A name that will be used for namespacing our cluster resources.'
+  ClusterName:
+    Type: String
+    Default: ecs-course-fargate
+    Description: 'A name that will be used for the ecs cluster.'
 Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Sub ${EnvironmentName}-fargate
+      ClusterName: !Ref 'ClusterName'
   ContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -22,9 +26,14 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
 Outputs:
-  ClusterName:
+  ECSCluster:
     Description: The name of the ECS cluster
     Value: !Ref 'ECSCluster'
+    Export:
+      Name: !Sub ${EnvironmentName}:ECSCluster
+  ClusterName:
+    Description: The name of the ECS cluster
+    Value: !Ref 'ClusterName'
     Export:
       Name: !Sub ${EnvironmentName}:ClusterName
   ContainerSecurityGroup:
