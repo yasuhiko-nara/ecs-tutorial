@@ -1,13 +1,16 @@
 # CodeBuild
 
 ## create IAM role and policy
+
 CodeBuild will assume that role and therefore needs certain permissions, especially in our case permissions for ECR.
 
 In IAM section of AWS console
 
-* click _Policies_
-* click _create Policy_ ==> choose **JSON**
-* paste the following JSON as policy content
+- click _Policies_
+- click _create Policy_ ==> choose **JSON**
+- paste the following JSON as policy content
+<!-- AmazonEC2ContainerRegistryFullAccessも追加しました-->
+
 ```
 {
   "Version": "2012-10-17",
@@ -84,17 +87,39 @@ In IAM section of AWS console
         "s3:GetBucketAcl",
         "s3:GetBucketLocation"
       ],
-      "Resource": 
+      "Resource":
         "*"
+    },
+    {
+      "Sid": "AmazonEC2ContainerRegistryPowerUser",
+      "Effect": "Allow",
+      "Action": [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetRepositoryPolicy",
+          "ecr:DescribeRepositories",
+          "ecr:ListImages",
+          "ecr:DescribeImages",
+          "ecr:BatchGetImage",
+          "ecr:GetLifecyclePolicy",
+          "ecr:GetLifecyclePolicyPreview",
+          "ecr:ListTagsForResource",
+          "ecr:DescribeImageScanFindings",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:PutImage"
+      ],
+      "Resource": "*"
     }
   ]
 }
 ```
 
-* set **CodeBuildServiceRolePolicy** as policy name
-* in the main navigation choose _Roles_
-* click _create Role_
-* choose **CodeBuild** as AWS service to add and click _Next::Permissions_
-* on _attach permissions policies_ page, select **CodeBuildServiceRolePolicy** and **AmazonEC2ContainerRegistryPowerUser** to add
-* save the role as **CodeBuildServiceRole**
-
+- set **CodeBuildServiceRolePolicy** as policy name
+- in the main navigation choose _Roles_
+- click _create Role_
+- choose **CodeBuild** as AWS service to add and click _Next::Permissions_
+- on _attach permissions policies_ page, select **CodeBuildServiceRolePolicy** and **AmazonEC2ContainerRegistryPowerUser** to add
+- save the role as **CodeBuildServiceRole**
