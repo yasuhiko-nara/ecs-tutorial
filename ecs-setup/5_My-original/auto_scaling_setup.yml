@@ -17,17 +17,6 @@ Parameters:
     Default: 2
     MinValue: 1
     ConstraintDescription: Value must be at least one
-
-  # ECSClusterName:
-  #   Type: String
-  #   Default:
-  #     ecs-course-fargate
-  #     Fn::ImportValue: !Sub ${EnvironmentName}:ClusterName
-  ECSServiceName:
-    Type: String
-    Default:
-      nginx-service
-      # Fn::ImportValue: !Sub ${EnvironmentName}:ServiceName
   ServiceScaleEvaluationPeriods:
     Description: The number of periods over which data is compared to the specified threshold
     Type: Number
@@ -53,11 +42,12 @@ Resources:
     Properties:
       MinCapacity: !Ref TaskMinContainerCount
       MaxCapacity: !Ref TaskMaxContainerCount
-      ResourceId: !Sub
-        - service/${EcsClusterName}/${EcsDefaultServiceName}
-        - EcsClusterName:
+      ResourceId:
+        !Sub #この書き方により、コンテキスト内でのみ有効な変数を定義できる
+        - service/${ECSClusterName}/${ECSServiceName} #auto scalingを適用するECSservieをこのフォーマットで指定。
+        - ECSClusterName:
             Fn::ImportValue: !Sub ${EnvironmentName}:ECSCluster
-          EcsDefaultServiceName:
+          ECSServiceName:
             Fn::ImportValue: !Sub ${EnvironmentName}:ServiceName
       RoleARN:
         Fn::ImportValue: !Sub ${EnvironmentName}:AutoscalingRole
@@ -67,7 +57,11 @@ Resources:
   ServiceScaleOutPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
-      PolicyName: !Sub '${EnvironmentName}-${ECSServiceName}-ScaleOutPolicy'
+      PolicyName: !Sub
+        - ${EnvironmentName}-${ECSServiceName}-ScaleOutPolicy
+        - EnvironmentName: !Ref EnvironmentName
+          ECSServiceName:
+            Fn::ImportValue: !Sub ${EnvironmentName}:ServiceName
       PolicyType: StepScaling
       ScalingTargetId: !Ref ServiceScalingTarget
       StepScalingPolicyConfiguration:
@@ -82,7 +76,11 @@ Resources:
   ServiceScaleInPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
-      PolicyName: !Sub '${EnvironmentName}-${ECSServiceName}-ScaleInPolicy'
+      PolicyName: !Sub
+        - ${EnvironmentName}-${ECSServiceName}-ScaleInPolicy
+        - EnvironmentName: !Ref EnvironmentName
+          ECSServiceName:
+            Fn::ImportValue: !Sub ${EnvironmentName}:ServiceName
       PolicyType: StepScaling
       ScalingTargetId: !Ref ServiceScalingTarget
       StepScalingPolicyConfiguration:
@@ -97,7 +95,11 @@ Resources:
   ServiceScaleOutAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub '${EnvironmentName}-${ECSServiceName}-ScaleOutAlarm'
+      AlarmName: !Sub
+        - ${EnvironmentName}-${ECSServiceName}-ScaleOutAlarm
+        - EnvironmentName: !Ref EnvironmentName
+          ECSServiceName:
+            Fn::ImportValue: !Sub ${EnvironmentName}:ServiceName
       EvaluationPeriods: !Ref ServiceScaleEvaluationPeriods
       Statistic: Average
       TreatMissingData: notBreaching
@@ -112,7 +114,11 @@ Resources:
           Value:
             Fn::ImportValue: !Sub ${EnvironmentName}:ECSCluster
         - Name: ServiceName
-          Value: !Sub '${EnvironmentName}-${ECSServiceName}'
+          Value: !Sub
+            - ${EnvironmentName}-${ECSServiceName}
+            - EnvironmentName: !Ref EnvironmentName
+              ECSServiceName:
+                Fn::ImportValue: !Sub ${EnvironmentName}:ServiceName
       ComparisonOperator: GreaterThanThreshold
       MetricName: CPUUtilization
     DependsOn:
@@ -121,7 +127,11 @@ Resources:
   ServiceScaleInAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub '${EnvironmentName}-${ECSServiceName}-ScaleInAlarm'
+      AlarmName: !Sub
+        - ${EnvironmentName}-${ECSServiceName}-ScaleInAlarm
+        - EnvironmentName: !Ref EnvironmentName
+          ECSServiceName:
+            Fn::ImportValue: !Sub ${EnvironmentName}:ServiceName
       EvaluationPeriods: !Ref ServiceScaleEvaluationPeriods
       Statistic: Average
       TreatMissingData: notBreaching
@@ -136,7 +146,11 @@ Resources:
           Value:
             Fn::ImportValue: !Sub ${EnvironmentName}:ECSCluster
         - Name: ServiceName
-          Value: !Sub '${EnvironmentName}-${ECSServiceName}'
+          Value: !Sub
+            - ${EnvironmentName}-${ECSServiceName}
+            - EnvironmentName: !Ref EnvironmentName
+              ECSServiceName:
+                Fn::ImportValue: !Sub ${EnvironmentName}:ServiceName
       ComparisonOperator: LessThanThreshold
       MetricName: CPUUtilization
     DependsOn:
