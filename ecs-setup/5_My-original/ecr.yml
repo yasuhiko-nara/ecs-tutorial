@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: make ECR repo.
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: ecs-course
+    Description: 'A name that will be used for namespacing our cluster resources.'
+  ECRName:
+    Type: String
+    Default: ecs-course-ecr
+    Description: 'A name that will be used for this ecr'
+
+Resources:
+  Repository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref ECRName
+
+Outputs:
+  Repository:
+    Description: Test Repository
+    Value: !Ref Repository
+    Export:
+      Name: !Sub ${EnvironmentName}:ECRName
