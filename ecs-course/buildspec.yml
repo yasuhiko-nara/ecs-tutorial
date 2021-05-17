@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - IMAGE_NAME="${REPOSITORY_URI}:$(echo ${CODEBUILD_RESOLVED_SOURCE_VERSION} | head -c 7)"
+      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+  build:
+    commands:
+      - echo Build started on $(date)
+      - DEFAULT=`pwd`
+      - cd ./ecs_deploy/application
+      - docker build --tag ${IMAGE_NAME} .
+      - docker push ${IMAGE_NAME}
+      - cd ${DEFAULT}
+  post_build:
+    commands:
+      - echo Build completed on $(date)
+      - printf '[{"ImageUri":"%s"}]' $IMAGE_NAME > > config.json
+
+artifacts:
+  files: config.json

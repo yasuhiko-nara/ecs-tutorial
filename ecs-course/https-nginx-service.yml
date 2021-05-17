@@ -22,13 +22,13 @@ Parameters:
     Description: A name for the service
   ImageUrl:
     Type: String
-    Default: 210217920752.dkr.ecr.us-east-2.amazonaws.com/ecr-test:latest
+    Default: 210217920752.dkr.ecr.us-east-2.amazonaws.com/ecs-course-ecr:latest
     Description:
       The url of a docker image that contains the application process that
       will handle the traffic for this service
   ContainerPort:
     Type: Number
-    Default: 80
+    Default: 3000
     Description: What port number the application inside the docker container is binding to
   ContainerCpu:
     Type: Number

@@ -1,3 +1,9 @@
+## CFn コマンド
+
+aws cloudformation create-stack --stack-name https-nginx-service --capabilities CAPABILITY_IAM --template-body file://./ecs-course/https-nginx-service.yml
+
+aws cloudformation create-stack --stack-name code-pipeline --capabilities CAPABILITY_IAM --template-body file://./ecs-course/code-pipeline.yml --parameters ParameterKey=GitHubOAuthToken,ParameterValue=ghp_1XXXXXXXXXXXX
+
 ## ECR の設定
 
 ## 認証トークンを取得し、レジストリに対して Docker クライアントを認証します
