@@ -9,7 +9,7 @@ phases:
     commands:
       - echo Build started on $(date)
       - DEFAULT=`pwd`
-      - cd ./ecs_deploy/application
+      - cd ./Docker
       - docker build --tag ${IMAGE_NAME} .
       - docker push ${IMAGE_NAME}
       - cd ${DEFAULT}

@@ -2,7 +2,11 @@
 
 aws cloudformation create-stack --stack-name https-nginx-service --capabilities CAPABILITY_IAM --template-body file://./ecs-course/https-nginx-service.yml
 
-aws cloudformation create-stack --stack-name code-pipeline --capabilities CAPABILITY_IAM --template-body file://./ecs-course/code-pipeline.yml --parameters ParameterKey=GitHubOAuthToken,ParameterValue=ghp_1XXXXXXXXXXXX
+aws cloudformation create-stack --stack-name code-pipeline --capabilities CAPABILITY_IAM --template-body file://./ecs-course/code-pipeline.yml --parameters ParameterKey=GitHubOAuthToken,ParameterValue=ghp_XXXXXXXXXX
+
+## Github の secret scope
+
+admin:repo_hook が必要
 
 ## ECR の設定
 
