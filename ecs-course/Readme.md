@@ -1,6 +1,6 @@
 ## CFn コマンド
 
-aws cloudformation create-stack --stack-name https-nginx-service --capabilities CAPABILITY_IAM --template-body file://./ecs-course/https-nginx-service.yml
+aws cloudformation create-stack --stack-name https-node-service --capabilities CAPABILITY_IAM --template-body file://./ecs-course/https-node-service.yml
 
 aws cloudformation create-stack --stack-name code-pipeline --capabilities CAPABILITY_IAM --template-body file://./ecs-course/code-pipeline.yml --parameters ParameterKey=GitHubOAuthToken,ParameterValue=ghp_XXXXXXXXXX
 
