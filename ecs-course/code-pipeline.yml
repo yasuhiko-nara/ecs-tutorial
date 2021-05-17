@@ -244,7 +244,7 @@ Resources:
                 Owner: AWS
                 Version: 1
               Configuration:
-                StackName: create-ecs-service
+                StackName: https-node-service
                 ActionMode: CHANGE_SET_EXECUTE
                 ChangeSetName: ChangeSet
               InputArtifacts:
