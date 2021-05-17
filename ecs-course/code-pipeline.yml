@@ -195,7 +195,7 @@ Resources:
                 Owner: !Ref GitHubAccountName
                 Repo: !Ref GitHubRepositoryName
                 PollForSourceChanges: false
-                Branch: master
+                Branch: main
                 OAuthToken: !Ref GitHubOAuthToken
               RunOrder: 1
               OutputArtifacts:
