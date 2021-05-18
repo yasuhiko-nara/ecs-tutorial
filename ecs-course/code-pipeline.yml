@@ -229,7 +229,7 @@ Resources:
                 ChangeSetName: ChangeSet
                 RoleArn: !GetAtt CloudFormationRole.Arn
                 Capabilities: CAPABILITY_NAMED_IAM
-                TemplatePath: SourceCode::ecs_course/https-node-service.yaml ##ここを変更！
+                TemplatePath: SourceCode::ecs_course/https-node-service.yml ##ここを変更！
                 TemplateConfiguration: BuildOutput::config.json
               InputArtifacts:
                 - Name: SourceCode
