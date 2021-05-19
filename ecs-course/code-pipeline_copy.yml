@@ -144,34 +144,34 @@ Resources:
       RegisterWithThirdParty: 'true'
 
   # 継続的デプロイに必要な権限
-  # CloudFormationRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Statement:
-  #         - Effect: Allow
-  #           Action: sts:AssumeRole
-  #           Principal:
-  #             Service: cloudformation.amazonaws.com
-  #     Policies:
-  #       - PolicyName: code-pipeline-service
-  #         PolicyDocument:
-  #           Statement:
-  #             - Effect: Allow
-  #               Action:
-  #                 - iam:*
-  #                 - ecs:RegisterTaskDefinition
-  #                 - ecs:DeregisterTaskDefinition
-  #                 - ecs:CreateService
-  #                 - ecs:Delete*
-  #                 - logs:Delete*
-  #                 - cloudwatch:Delete*
-  #               Resource: '*'
-  #     ManagedPolicyArns:
-  #       - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-  #       - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole
-  #       - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole
-  #     Path: /
+  CloudFormationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: cloudformation.amazonaws.com
+      Policies:
+        - PolicyName: code-pipeline-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:*
+                  - ecs:RegisterTaskDefinition
+                  - ecs:DeregisterTaskDefinition
+                  - ecs:CreateService
+                  - ecs:Delete*
+                  - logs:Delete*
+                  - cloudwatch:Delete*
+                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole
+      Path: /
 
   # CodePipeLine
   Pipeline:
@@ -215,57 +215,40 @@ Resources:
                 - Name: SourceCode
               OutputArtifacts:
                 - Name: BuildOutput
-        - Name: Deploy
+        - Name: Deploy #ここをあとでいじる必要があります！！宿題！#もしくはCFnを使わないやり方も要検討
           Actions:
-            - Name: Deploy
+            - Name: CreateEdgeChangeSet
               ActionTypeId:
                 Category: Deploy
+                Provider: CloudFormation
                 Owner: AWS
                 Version: 1
-                Provider: ECS
               Configuration:
-                ClusterName:
-                  Fn::ImportValue: !Sub ${EnvironmentName}:ClusterName
-                ServiceName:
-                  Fn::ImportValue: !Sub ${EnvironmentName}:ServiceName
-                FileName: config.json
+                StackName: https-node-service
+                ActionMode: CHANGE_SET_REPLACE
+                ChangeSetName: ChangeSet
+                RoleArn: !GetAtt CloudFormationRole.Arn
+                Capabilities: CAPABILITY_NAMED_IAM
+                TemplatePath: SourceCode::ecs_course/https-node-service.yml ##ここを変更！
+                TemplateConfiguration: BuildOutput::config.json
               InputArtifacts:
+                - Name: SourceCode
                 - Name: BuildOutput
+              OutputArtifacts:
+                - Name: CreatedEdgeChangeSet
               RunOrder: 1
-        # - Name: Deploy #ここをあとでいじる必要があります！！宿題！#もしくはCFnを使わないやり方も要検討
-        #   Actions:
-        #     - Name: CreateEdgeChangeSet
-        #       ActionTypeId:
-        #         Category: Deploy
-        #         Provider: CloudFormation
-        #         Owner: AWS
-        #         Version: 1
-        #       Configuration:
-        #         StackName: https-node-service
-        #         ActionMode: CHANGE_SET_REPLACE
-        #         ChangeSetName: ChangeSet
-        #         RoleArn: !GetAtt CloudFormationRole.Arn
-        #         Capabilities: CAPABILITY_NAMED_IAM
-        #         TemplatePath: SourceCode::ecs_course/https-node-service.yml ##ここを変更！
-        #         TemplateConfiguration: BuildOutput::config.json
-        #       InputArtifacts:
-        #         - Name: SourceCode
-        #         - Name: BuildOutput
-        #       OutputArtifacts:
-        #         - Name: CreatedEdgeChangeSet
-        #       RunOrder: 1
-        #     - Name: ExecuteEdgeChangeSet
-        #       ActionTypeId:
-        #         Category: Deploy
-        #         Provider: CloudFormation
-        #         Owner: AWS
-        #         Version: 1
-        #       Configuration:
-        #         StackName: https-node-service
-        #         ActionMode: CHANGE_SET_EXECUTE
-        #         ChangeSetName: ChangeSet
-        #       InputArtifacts:
-        #         - Name: CreatedEdgeChangeSet
-        #       OutputArtifacts:
-        #         - Name: EdgeDeployed
-        #       RunOrder: 2
+            - Name: ExecuteEdgeChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Provider: CloudFormation
+                Owner: AWS
+                Version: 1
+              Configuration:
+                StackName: https-node-service
+                ActionMode: CHANGE_SET_EXECUTE
+                ChangeSetName: ChangeSet
+              InputArtifacts:
+                - Name: CreatedEdgeChangeSet
+              OutputArtifacts:
+                - Name: EdgeDeployed
+              RunOrder: 2
