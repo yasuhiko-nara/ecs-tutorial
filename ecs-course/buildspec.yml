@@ -19,4 +19,4 @@ phases:
       - printf '[{"ImageUri":"%s"}]' "$IMAGE_NAME" > image.json
 
 artifacts:
-  files: config.json
+  files: image.json
