@@ -16,7 +16,8 @@ phases:
   post_build:
     commands:
       - echo Build completed on $(date)
-      - printf '[{"ImageUri":"%s"}]' "$IMAGE_NAME" > image.json
+      - printf '[{"name":"simple-app","imageUri":"%s"}]' "$IMAGE_NAME" > image.json
+      # - printf '[{"ImageUri":"%s"}]' "$IMAGE_NAME" > image.json
 
 artifacts:
   files: image.json
