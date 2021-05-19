@@ -91,6 +91,10 @@ Resources:
             Principal:
               Service: codepipeline.amazonaws.com
             Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole
       Policies:
         - PolicyName: code-pipeline-service
           PolicyDocument:
