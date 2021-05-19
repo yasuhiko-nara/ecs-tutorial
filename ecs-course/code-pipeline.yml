@@ -228,7 +228,7 @@ Resources:
                   Fn::ImportValue: !Sub ${EnvironmentName}:ClusterName
                 ServiceName:
                   Fn::ImportValue: !Sub ${EnvironmentName}:ServiceName
-                FileName: config.json
+                FileName: image.json
               InputArtifacts:
                 - Name: BuildOutput
               RunOrder: 1
