@@ -138,7 +138,7 @@ Resources:
     Type: AWS::CodePipeline::Pipeline
     Properties:
       RoleArn: !GetAtt CodePipelineServiceRole.Arn
-      Name: pipeline-test-build
+      Name: test-pipeline-for-node-pjt
       ArtifactStore:
         Type: S3
         Location: !Ref ArtifactBucket
