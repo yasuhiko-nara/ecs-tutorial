@@ -154,7 +154,7 @@ Resources:
               Configuration:
                 Owner: !Ref GitHubAccountName
                 Repo: !Ref GitHubRepositoryName
-                PollForSourceChanges: false
+                PollForSourceChanges: true #ブランチの変更を自動検知してパイプラインをトリガーする
                 Branch: main
                 OAuthToken: !Ref GitHubOAuthToken
               RunOrder: 1
