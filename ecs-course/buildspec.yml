@@ -3,21 +3,21 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - IMAGE_NAME="${REPOSITORY_URI}:$(echo ${CODEBUILD_RESOLVED_SOURCE_VERSION} | head -c 7)"
+      - IMAGE_URI="${REPOSITORY_URI}:$(echo ${CODEBUILD_RESOLVED_SOURCE_VERSION} | head -c 7)"
       - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
   build:
     commands:
       - echo Build started on $(date)
       - DEFAULT=`pwd`
       - cd ./Docker
-      - docker build --tag ${IMAGE_NAME} .
-      - docker push ${IMAGE_NAME}
+      - docker build --tag ${IMAGE_URI} .
+      - docker push ${IMAGE_URI}
       - cd ${DEFAULT}
   post_build:
     commands:
       - echo Build completed on $(date)
-      - printf '[{"name":"node-service","imageUri":"%s"}]' "$IMAGE_NAME" > image.json
-      # - printf '[{"ImageUri":"%s"}]' "$IMAGE_NAME" > image.json
+      - printf '[{"name":"%s","imageUri":"%s"}]' "${CONTAINER_NAME}","$IMAGE_URI" > image.json
+      # jsonのキーのnameとimageUriは必須。必要であればparametersを追加。
 
 artifacts:
   files: image.json
