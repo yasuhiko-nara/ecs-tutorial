@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: External, public facing load balancer, for forwarding public traffic to containers
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: ecs-course
+  ServiceName:
+    Type: String
+    Default: node-service
+    Description: A name for the service
+  ContainerPort:
+    Type: Number
+    Default: 8000
+    Description: What port number the application inside the docker container is binding to
+
+Mappings:
+  SubnetConfig:
+    PrivateOne:
+      CIDR: '172.16.2.0/24'
+    PrivateTwo:
+      CIDR: '172.16.3.0/24'
+
+Resources:
+  PrivateSubnetOne:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: { Ref: 'AWS::Region' }
+      VpcId: !Ref 'VPC'
+      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateOne', 'CIDR']
+      MapPublicIpOnLaunch: true
+
+  PrivateSubneTwo:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: { Ref: 'AWS::Region' }
+      VpcId: !Ref 'VPC'
+      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateTwo', 'CIDR']
+      MapPublicIpOnLaunch: true
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the ECS hosts that run containers
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: !Ref 'ContainerPort'
+          CidrIp: 172.16.0.0/16 #VPC内からの通信のみ許可
+
+  PrivateNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Name: example.com
+      Vpc: vpc-xxxxxxx
+
+  DiscoveryService:
+  Type: AWS::ServiceDiscovery::Service
+  Properties:
+    Description: Discovery Service for the Demo Application
+    DnsConfig:
+      RoutingPolicy: MULTIVALUE
+      DnsRecords:
+        - TTL: 60
+          Type: A
+        - TTL: 60
+          Type: SRV
+    HealthCheckCustomConfig:
+      FailureThreshold: 1
+    Name: example-service-name
+    NamespaceId: !Ref PrivateNamespace
+
+EcsService:
+  Type: AWS::ECS::Service
+  Properties:
+    Cluster: awsExampleCluster
+    DesiredCount: 4
+    LaunchType: FARGATE
+    NetworkConfiguration:
+      AwsvpcConfiguration:
+        SecurityGroups:
+          - sg-xxxxxxx
+        Subnets:
+          - subnet-xxxxxxx
+    ServiceName: awsExampleService
+    TaskDefinition: awsExampleTaskDefinition
+    ServiceRegistries:
+      - RegistryArn: !GetAtt DiscoveryService.Arn
+        Port: 80
+
+Outputs:
+  PublicSubnetOne:
+    Description: Private subnet one
+    Value: !Ref 'PrivateSubnetOne'
+    Export:
+      Name: !Sub ${EnvironmentName}:PrivateSubnetOne
+  PublicSubnetTwo:
+    Description: Private subnet two
+    Value: !Ref 'PrivateSubnetTwo'
+    Export:
+      Name: !Sub ${EnvironmentName}:PrivateSubnetTwo

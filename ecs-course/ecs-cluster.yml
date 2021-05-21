@@ -28,7 +28,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: !Ref 'ContainerPort'
-          CidrIp: 0.0.0.0/0
+          CidrIp: 172.16.0.0/16 #VPC内からの通信のみ許可
 Outputs:
   ECSCluster:
     Description: The name of the ECS cluster
