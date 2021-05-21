@@ -58,8 +58,9 @@ Resources:
   PrivateNamespace:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties:
-      Name: example.com
-      Vpc: vpc-xxxxxxx
+      Name: example-namespace.com
+      Vpc:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
 
   DiscoveryService:
   Type: AWS::ServiceDiscovery::Service
