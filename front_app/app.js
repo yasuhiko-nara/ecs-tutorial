@@ -2,7 +2,8 @@ const express = require('express');
 const app = express();
 const port = 3000;
 const axios = require('axios');
-const url = 'http://localhost:8000';
+const url = 'http://node-service-backend.example-namespace.com:8000';
+// ecsService.namespace:port
 
 app.get('/', (req, res) => {
   res.send('Hello from FRONTEND-server!');

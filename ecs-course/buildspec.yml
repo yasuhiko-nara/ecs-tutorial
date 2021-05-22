@@ -9,7 +9,7 @@ phases:
     commands:
       - echo Build started on $(date)
       - DEFAULT=`pwd`
-      - cd ./Docker
+      - cd ./front_app
       - docker build --tag ${IMAGE_URI} .
       - docker push ${IMAGE_URI}
       - cd ${DEFAULT}
