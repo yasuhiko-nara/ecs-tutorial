@@ -50,18 +50,20 @@ Resources:
         Fn::Select:
           - 0
           - Fn::GetAZs: { Ref: 'AWS::Region' }
-      VpcId: !Ref 'VPC'
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       CidrBlock: !FindInMap ['SubnetConfig', 'PrivateOne', 'CIDR']
       MapPublicIpOnLaunch: true
 
-  PrivateSubneTwo:
+  PrivateSubnetTwo:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone:
         Fn::Select:
           - 1
           - Fn::GetAZs: { Ref: 'AWS::Region' }
-      VpcId: !Ref 'VPC'
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
       CidrBlock: !FindInMap ['SubnetConfig', 'PrivateTwo', 'CIDR']
       MapPublicIpOnLaunch: true
 
@@ -85,20 +87,20 @@ Resources:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
 
   DiscoveryService: #namespaceとserviceを紐付ける
-  Type: AWS::ServiceDiscovery::Service
-  Properties:
-    Description: Discovery Service for the Demo Application
-    DnsConfig:
-      RoutingPolicy: MULTIVALUE
-      DnsRecords:
-        - TTL: 60
-          Type: A
-        - TTL: 60
-          Type: SRV
-    HealthCheckCustomConfig:
-      FailureThreshold: 1
-    Name: !Ref ServiceName
-    NamespaceId: !Ref PrivateNamespace
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Description: Discovery Service for the Demo Application
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+          - TTL: 60
+            Type: SRV
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: !Ref ServiceName
+      NamespaceId: !Ref PrivateNamespace
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -154,12 +156,12 @@ Resources:
           Port: !Ref 'ContainerPort'
 
 Outputs:
-  PublicSubnetOne:
+  PrivateSubnetOne:
     Description: Private subnet one
     Value: !Ref 'PrivateSubnetOne'
     Export:
       Name: !Sub ${EnvironmentName}:PrivateSubnetOne
-  PublicSubnetTwo:
+  PrivateSubnetTwo:
     Description: Private subnet two
     Value: !Ref 'PrivateSubnetTwo'
     Export:
