@@ -4,7 +4,7 @@ aws cloudformation create-stack --stack-name ecr --capabilities CAPABILITY_IAM -
 
 aws cloudformation create-stack --stack-name ecs-iam-role-setting --capabilities CAPABILITY_IAM --template-body file://./ecs-course/create_IAM_roles.yml
 
-aws cloudformation create-stack --stack-name ecs-core-infrastructure --capabilities CAPABILITY_IAM --template-body file://./ecs-course/core-infrastructure-setup.yml
+aws cloudformation create-stack --stack-name VPC --capabilities CAPABILITY_IAM --template-body file://./ecs-course/core-infrastructure-setup.yml
 
 aws cloudformation create-stack --stack-name ecs-cluster --capabilities CAPABILITY_IAM --template-body file://./ecs-course/ecs-cluster.yml
 

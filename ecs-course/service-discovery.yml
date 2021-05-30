@@ -6,7 +6,7 @@ Parameters:
     Default: ecs-course
   NameSpace:
     Type: String
-    Default: example-namespace.com
+    Default: example-namespace.local
     Description: A name for the namespace
   ServiceName:
     Type: String
@@ -34,39 +34,39 @@ Parameters:
     Type: Number
     Default: 1
     Description: How many copies of the service task to run
-
-Mappings:
-  SubnetConfig:
-    PrivateOne:
-      CIDR: '172.16.2.0/24'
-    PrivateTwo:
-      CIDR: '172.16.3.0/24'
+  TaskMinContainerCount:
+    Type: Number
+    Description: Minimum number of containers to run for the service
+    Default: 1
+    MinValue: 1
+    ConstraintDescription: Value must be at least one
+  TaskMaxContainerCount:
+    Type: Number
+    Description: Maximum number of containers to run for the service when auto scaling out
+    Default: 2
+    MinValue: 1
+    ConstraintDescription: Value must be at least one
+  ServiceScaleEvaluationPeriods:
+    Description: The number of periods over which data is compared to the specified threshold
+    Type: Number
+    Default: 2
+    MinValue: 2
+  ServiceCpuScaleOutThreshold:
+    Type: Number
+    Description: Average CPU value to trigger auto scaling out
+    Default: 50
+    MinValue: 0
+    MaxValue: 100
+    ConstraintDescription: Value must be between 0 and 100
+  ServiceCpuScaleInThreshold:
+    Type: Number
+    Description: Average CPU value to trigger auto scaling in
+    Default: 25
+    MinValue: 0
+    MaxValue: 100
+    ConstraintDescription: Value must be between 0 and 100
 
 Resources:
-  PrivateSubnetOne:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone:
-        Fn::Select:
-          - 0
-          - Fn::GetAZs: { Ref: 'AWS::Region' }
-      VpcId:
-        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
-      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateOne', 'CIDR']
-      MapPublicIpOnLaunch: true
-
-  PrivateSubnetTwo:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone:
-        Fn::Select:
-          - 1
-          - Fn::GetAZs: { Ref: 'AWS::Region' }
-      VpcId:
-        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
-      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateTwo', 'CIDR']
-      MapPublicIpOnLaunch: true
-
   ContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -102,6 +102,11 @@ Resources:
       Name: !Ref ServiceName
       NamespaceId: !Ref PrivateNamespace
 
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub ${EnvironmentName}-service-${ServiceName}
+
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -113,8 +118,7 @@ Resources:
         - FARGATE
       ExecutionRoleArn:
         Fn::ImportValue: !Sub ${EnvironmentName}:ECSTaskExecutionRole
-      TaskRoleArn:
-        Fn::ImportValue: !Sub ${EnvironmentName}:ECSTaskExecutionRole #とりあえず。本来はDBへの接続権限とか
+      TaskRoleArn: !Ref 'AWS::NoValue' #とりあえず。本来はDBへの接続権限とか
       ContainerDefinitions:
         - Name: !Ref 'ServiceName'
           Cpu: !Ref 'ContainerCpu'
@@ -144,25 +148,126 @@ Resources:
       DesiredCount: !Ref 'DesiredCount'
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: ENABLED # これによりECRにアクセスできる
           SecurityGroups:
             - !Ref ContainerSecurityGroup
           Subnets:
-            - !Ref PrivateSubnetOne
-            - !Ref PrivateSubnetTwo
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
       TaskDefinition: !Ref 'TaskDefinition'
       ServiceRegistries:
         - RegistryArn: !GetAtt DiscoveryService.Arn
           Port: !Ref 'ContainerPort'
 
-Outputs:
-  PrivateSubnetOne:
-    Description: Private subnet one
-    Value: !Ref 'PrivateSubnetOne'
-    Export:
-      Name: !Sub ${EnvironmentName}:PrivateSubnetOne
-  PrivateSubnetTwo:
-    Description: Private subnet two
-    Value: !Ref 'PrivateSubnetTwo'
-    Export:
-      Name: !Sub ${EnvironmentName}:PrivateSubnetTwo
+  ServiceScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: Service
+    Properties:
+      MinCapacity: !Ref TaskMinContainerCount
+      MaxCapacity: !Ref TaskMaxContainerCount
+      ResourceId:
+        !Sub #この書き方により、コンテキスト内でのみ有効な変数を定義できる
+        - service/${ECSClusterName}/${ECSServiceName} #auto scalingを適用するECSservieをこのフォーマットで指定。
+        - ECSClusterName:
+            Fn::ImportValue: !Sub ${EnvironmentName}:ECSCluster
+          ECSServiceName: !Ref ServiceName
+      RoleARN:
+        Fn::ImportValue: !Sub ${EnvironmentName}:AutoscalingRole
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  ServiceScaleOutPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub
+        - ${EnvironmentName}-${ECSServiceName}-ScaleOutPolicy
+        - EnvironmentName: !Ref EnvironmentName
+          ECSServiceName: !Ref ServiceName
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref ServiceScalingTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 60
+        MetricAggregationType: Average
+        StepAdjustments:
+          - ScalingAdjustment: 1
+            MetricIntervalLowerBound: 0
+    DependsOn: ServiceScalingTarget
+
+  ServiceScaleInPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub
+        - ${EnvironmentName}-${ECSServiceName}-ScaleInPolicy
+        - EnvironmentName: !Ref EnvironmentName
+          ECSServiceName: !Ref ServiceName
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref ServiceScalingTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 60
+        MetricAggregationType: Average
+        StepAdjustments:
+          - ScalingAdjustment: -1
+            MetricIntervalUpperBound: 0
+    DependsOn: ServiceScalingTarget
+
+  ServiceScaleOutAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub
+        - ${EnvironmentName}-${ECSServiceName}-ScaleOutAlarm
+        - EnvironmentName: !Ref EnvironmentName
+          ECSServiceName: !Ref ServiceName
+      EvaluationPeriods: !Ref ServiceScaleEvaluationPeriods
+      Statistic: Average
+      TreatMissingData: notBreaching
+      Threshold: !Ref ServiceCpuScaleOutThreshold
+      AlarmDescription: Alarm to add capacity if CPU is high
+      Period: 60
+      AlarmActions:
+        - !Ref ServiceScaleOutPolicy
+      Namespace: AWS/ECS
+      Dimensions:
+        - Name: ClusterName
+          Value:
+            Fn::ImportValue: !Sub ${EnvironmentName}:ECSCluster
+        - Name: ServiceName
+          Value: !Sub
+            - ${EnvironmentName}-${ECSServiceName}
+            - EnvironmentName: !Ref EnvironmentName
+              ECSServiceName: !Ref ServiceName
+      ComparisonOperator: GreaterThanThreshold
+      MetricName: CPUUtilization
+    DependsOn:
+      - ServiceScaleOutPolicy
+
+  ServiceScaleInAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub
+        - ${EnvironmentName}-${ECSServiceName}-ScaleInAlarm
+        - EnvironmentName: !Ref EnvironmentName
+          ECSServiceName: !Ref ServiceName
+      EvaluationPeriods: !Ref ServiceScaleEvaluationPeriods
+      Statistic: Average
+      TreatMissingData: notBreaching
+      Threshold: !Ref ServiceCpuScaleInThreshold
+      AlarmDescription: Alarm to reduce capacity if container CPU is low
+      Period: 300
+      AlarmActions:
+        - !Ref ServiceScaleInPolicy
+      Namespace: AWS/ECS
+      Dimensions:
+        - Name: ClusterName
+          Value:
+            Fn::ImportValue: !Sub ${EnvironmentName}:ECSCluster
+        - Name: ServiceName
+          Value: !Sub
+            - ${EnvironmentName}-${ECSServiceName}
+            - EnvironmentName: !Ref EnvironmentName
+              ECSServiceName: !Ref ServiceName
+      ComparisonOperator: LessThanThreshold
+      MetricName: CPUUtilization
+    DependsOn:
+      - ServiceScaleInPolicy

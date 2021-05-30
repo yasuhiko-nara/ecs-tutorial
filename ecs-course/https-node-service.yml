@@ -113,17 +113,18 @@ Resources:
       DesiredCount: !Ref 'DesiredCount'
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: ENABLED # これによりECRにアクセスできる
           SecurityGroups:
             - Fn::ImportValue: !Sub ${EnvironmentName}:ContainerSecurityGroup
           Subnets:
-            - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
-            - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
       TaskDefinition: !Ref 'TaskDefinition'
       LoadBalancers:
         - ContainerName: !Ref 'ServiceName'
           ContainerPort: !Ref 'ContainerPort'
           TargetGroupArn: !Ref 'TargetGroup'
+
   ApiDomain:
     Type: AWS::Route53::RecordSet
     DependsOn: PublicLoadBalancer
@@ -134,6 +135,7 @@ Resources:
       TTL: 60
       ResourceRecords:
         - !GetAtt PublicLoadBalancer.DNSName
+
   ACMCertificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
@@ -142,6 +144,7 @@ Resources:
         - DomainName: !Sub '${SubDomain}'
           HostedZoneId: !Sub '${HostZoneId}'
       ValidationMethod: DNS
+
   PublicLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -157,6 +160,7 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
+
   PublicLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -168,6 +172,7 @@ Resources:
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
         - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
       SecurityGroups: [!Ref 'PublicLoadBalancerSG']
+
   HTTPLoadBalancerListener: # 80=>443に転送する
     Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn:
@@ -185,6 +190,7 @@ Resources:
       LoadBalancerArn: !Ref 'PublicLoadBalancer'
       Port: 80
       Protocol: HTTP
+
   HTTPSLoadBalancerListener: # SSL設定してTargetGroupに転送
     Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn: PublicLoadBalancer
@@ -198,6 +204,7 @@ Resources:
       SslPolicy: 'ELBSecurityPolicy-2016-08'
       Certificates:
         - CertificateArn: !Ref 'ACMCertificate'
+
   TargetGroup: # Serviceを参照させる
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DependsOn: PublicLoadBalancer
@@ -214,6 +221,7 @@ Resources:
       UnhealthyThresholdCount: 2
       VpcId:
         Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+
 Outputs:
   ExternalUrl:
     Description: The url of the external load balancer
