@@ -4,17 +4,17 @@ aws cloudformation create-stack --stack-name ecr --capabilities CAPABILITY_IAM -
 
 aws cloudformation create-stack --stack-name ecs-iam-role-setting --capabilities CAPABILITY_IAM --template-body file://./ecs-course/create_IAM_roles.yml
 
-aws cloudformation create-stack --stack-name VPC --capabilities CAPABILITY_IAM --template-body file://./ecs-course/core-infrastructure-setup.yml
+aws cloudformation create-stack --stack-name vpc --capabilities CAPABILITY_IAM --template-body file://./ecs-course/vpc.yml
 
 aws cloudformation create-stack --stack-name ecs-cluster --capabilities CAPABILITY_IAM --template-body file://./ecs-course/ecs-cluster.yml
 
-aws cloudformation create-stack --stack-name https-node-service --capabilities CAPABILITY_IAM --template-body file://./ecs-course/https-node-service.yml
+aws cloudformation create-stack --stack-name https-frontend-service --capabilities CAPABILITY_IAM --template-body file://./ecs-course/https-frontend-service.yml
 
-aws cloudformation create-stack --stack-name auto-scaling --capabilities CAPABILITY_IAM --template-body file://./ecs-course/auto_scaling_setup.yml
+aws cloudformation create-stack --stack-name frontend-auto-scaling --capabilities CAPABILITY_IAM --template-body file://./ecs-course/auto_scaling_setup.yml
 
-aws cloudformation create-stack --stack-name backend-service --capabilities CAPABILITY_IAM --template-body file://./ecs-course/service-discovery.yml
+aws cloudformation create-stack --stack-name backend-service --capabilities CAPABILITY_IAM --template-body file://./ecs-course/backend-service.yml
 
-aws cloudformation create-stack --stack-name code-pipeline --capabilities CAPABILITY_IAM --template-body file://./ecs-course/code-pipeline.yml --parameters ParameterKey=GitHubOAuthToken,ParameterValue=ghp_XXXXXXXXXX
+aws cloudformation create-stack --stack-name frontend-code-pipeline --capabilities CAPABILITY_IAM --template-body file://./ecs-course/code-pipeline.yml --parameters ParameterKey=GitHubOAuthToken,ParameterValue=ghp_XXXXXXXXXX
 
 ## Github の secret scope
 
