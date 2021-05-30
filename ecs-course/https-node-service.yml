@@ -96,6 +96,18 @@ Resources:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: !Ref 'ServiceName'
 
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the ECS hosts that run containers
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: !Ref 'ContainerPort'
+          CidrIp: 172.16.0.0/16 #VPC内からの通信のみ許可
+
   # The service. The service is a resource which allows you to run multiple
   # copies of a type of task, and gather up their logs and metrics, as well
   # as monitor the number of running tasks and replace any that have crashed
@@ -115,7 +127,7 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED # これによりECRにアクセスできる
           SecurityGroups:
-            - Fn::ImportValue: !Sub ${EnvironmentName}:ContainerSecurityGroup
+            - !Ref ContainerSecurityGroup
           Subnets:
             - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
             - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo

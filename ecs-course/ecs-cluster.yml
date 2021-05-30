@@ -9,26 +9,13 @@ Parameters:
     Type: String
     Default: ecs-course-fargate
     Description: 'A name that will be used for the ecs cluster.'
-  ContainerPort:
-    Type: Number
-    Default: 3000
-    Description: What port number the application inside the docker container is binding to
+
 Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Ref 'ClusterName'
-  ContainerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Access to the ECS hosts that run containers
-      VpcId:
-        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: !Ref 'ContainerPort'
-          CidrIp: 172.16.0.0/16 #VPC内からの通信のみ許可
+
 Outputs:
   ECSCluster:
     Description: The name of the ECS cluster
@@ -40,8 +27,3 @@ Outputs:
     Value: !Ref 'ClusterName'
     Export:
       Name: !Sub ${EnvironmentName}:ClusterName
-  ContainerSecurityGroup:
-    Description: The container sg of the ECS cluster
-    Value: !Ref 'ContainerSecurityGroup'
-    Export:
-      Name: !Sub ${EnvironmentName}:ContainerSecurityGroup
